@@ -27,7 +27,7 @@
     <div class="close-modal" @click="isFileModal = !isFileModal">X</div>
     <label>
       Число видов:
-      <input type="number" v-model="populationsCount" />
+      <input type="number" v-model.number="populationsCount" />
     </label>
     <button
       @click="
@@ -45,13 +45,13 @@
     <div>
       <label>
         Шаг дифференцирования:
-        <input type="number" v-model="step" />
+        <input type="number" v-model.number="step" />
       </label>
     </div>
     <div>
       <label>
         Время моделирования:
-        <input type="number" v-model="duration" />
+        <input type="number" v-model.number="duration" />
       </label>
     </div>
     <div>
@@ -82,6 +82,7 @@
             </div>
             <div style="width: 15%">Количество</div>
             <div style="width: 15%">Прирост</div>
+            <div style="width: 15%">Миграция</div>
           </div>
           <div
             v-for="(item, index) in populations"
@@ -104,6 +105,14 @@
                 :value="item.growth"
                 @change="
                   changePopulations($event.target.value, index, 'growth')
+                "
+              />
+            </div>
+            <div>
+              <input
+                :value="item.migration"
+                @change="
+                  changePopulations($event.target.value, index, 'migration')
                 "
               />
             </div>
@@ -205,6 +214,7 @@ export default {
         .map((item, index) => ({
           amount: 100 * (index + 1),
           growth: index === 0 ? 0.01 : -0.01,
+          migration: 20 * (index+1),
         })),
       data: new Array(1).fill(0).map(() => {
         const len = this.populationsCount ? this.populationsCount : 2;
@@ -286,16 +296,14 @@ export default {
           ...currentData,
           day: currentData.day + this.step,
         };
-        // console.log(this.populations)
         for (let k = 0; k < this.step; ++k) {
           for (let i = 0; i < this.populationsCount; ++i) {
-            console.log(newData)
             const N = newData[i]; // amount current population
             let dN = N * this.populations[i].growth;
-            console.log(dN, N)
             for (let j = 0; j < this.populationsCount; ++j) {
               dN += this.coeffs[i][j] * N * newData[j];
             }
+            dN += this.populations[i].migration / N;
             newData[i] = N + dN;
           }
         }
